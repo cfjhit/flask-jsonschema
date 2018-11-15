@@ -7,16 +7,13 @@
 """
 
 import os
+import warnings
 
 from functools import wraps
 
-try:
-    import simplejson as json
-except ImportError:
-    import json
-
-from flask import current_app, request
-from jsonschema import ValidationError, validate
+from flask import current_app, request, json
+from json import JSONEncoder
+from jsonschema import ValidationError, validate as _validate
 
 
 class _JsonSchema(object):
@@ -52,14 +49,45 @@ class JsonSchema(object):
         return state
 
     def validate(self, *path):
+        warnings.warn('the `JsonSchemea.validate` function is deprecated. Please use the '
+                      'module level `flask_jsonschema.validate` function instead.',
+                      PendingDeprecationWarning)
+
         def wrapper(fn):
             @wraps(fn)
             def decorated(*args, **kwargs):
-                schema = current_app.extensions['jsonschema'].get_schema(path)
-                validate(request.json, schema)
+                data = request.json
+                jschema = current_app.extensions.get('jsonschema', None)
+                if jschema is None:
+                    raise RuntimeError('Flask-JsonSchema was not properly initialized for the '
+                                       'current application: %s' % current_app)
+                if request.method == 'GET':
+                    data = json.dumps(request.args, ensure_ascii=False, cls=MyEncoder)
+                _validate(request.json, jschema.get_schema(path))
                 return fn(*args, **kwargs)
             return decorated
         return wrapper
 
     def __getattr__(self, name):
         return getattr(self._state, name, None)
+
+
+class MyEncoder(JSONEncoder):
+    def default(self, o):
+        return o.__dict__
+
+
+def validate(*path):
+    def wrapper(fn):
+        @wraps(fn)
+        def decorated(*args, **kwargs):
+            jschema = current_app.extensions.get('jsonschema', None)
+            if jschema is None:
+                raise RuntimeError('Flask-JsonSchema was not properly initialized for the '
+                                   'current application: %s' % current_app)
+            _validate(request.json, jschema.get_schema(path))
+            return fn(*args, **kwargs)
+        return decorated
+    return wrapper
+
+

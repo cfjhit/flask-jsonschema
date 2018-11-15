@@ -9,9 +9,9 @@ from setuptools import setup
 
 
 setup(
-    name='Flask-JsonSchema',
+    name='Flask-JsonSchema-All',
     version='0.1.0',
-    url='https://github.com/mattupstate/flask-jsonschema',
+    url='https://github.com/cfjhit/flask-jsonschema',
     license='MIT',
     author='Matt Wright',
     author_email='matt@nobien.net',
