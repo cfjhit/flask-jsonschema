@@ -10,7 +10,7 @@ from setuptools import setup
 
 setup(
     name='Flask-JsonSchema-All',
-    version='0.1.0',
+    version='0.1.1',
     url='https://github.com/cfjhit/flask-jsonschema',
     license='MIT',
     author='jay.chen',
