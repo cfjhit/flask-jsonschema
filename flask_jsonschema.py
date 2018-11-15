@@ -56,25 +56,21 @@ class JsonSchema(object):
         def wrapper(fn):
             @wraps(fn)
             def decorated(*args, **kwargs):
-                data = request.json
                 jschema = current_app.extensions.get('jsonschema', None)
                 if jschema is None:
                     raise RuntimeError('Flask-JsonSchema was not properly initialized for the '
                                        'current application: %s' % current_app)
                 if request.method == 'GET':
-                    data = json.dumps(request.args, ensure_ascii=False, cls=MyEncoder)
-                _validate(request.json, jschema.get_schema(path))
+                    data = request.args.to_dict()
+                else:
+                    data = request.get_json(force=True)
+                _validate(data, jschema.get_schema(path))
                 return fn(*args, **kwargs)
             return decorated
         return wrapper
 
     def __getattr__(self, name):
         return getattr(self._state, name, None)
-
-
-class MyEncoder(JSONEncoder):
-    def default(self, o):
-        return o.__dict__
 
 
 def validate(*path):

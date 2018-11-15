@@ -28,3 +28,8 @@ pip-log.txt
 
 # My configurations:
 .idea/
+
+# virtualenv
+.venv/
+venv/
+ENV/
